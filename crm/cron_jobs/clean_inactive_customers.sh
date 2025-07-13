@@ -1,20 +1,20 @@
 #!/bin/bash
 
-# Get the directory of the current script
+# Get directory of current script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Move to project root
+# Change to project root (assumes script is at crm/cron_jobs/)
 cd "$SCRIPT_DIR/../.."
 
-# Save current working directory
+# Store current working directory
 CWD=$(pwd)
 
-# Log file
-LOG_FILE="/tmp/customer_cleanup_log.txt"
+# Timestamp and log file
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
+LOG_FILE="/tmp/customer_cleanup_log.txt"
 
-# Check if we're in the right directory
-if [ -d "$CWD/crm" ]; then
+# Ensure we're in the correct directory
+if [ -f "manage.py" ]; then
   DELETED_COUNT=$(python manage.py shell <<EOF
 from datetime import timedelta
 from django.utils import timezone
@@ -28,8 +28,7 @@ print(count)
 EOF
   )
 
-  # Log the deletion
   echo "$TIMESTAMP - Deleted $DELETED_COUNT inactive customers" >> "$LOG_FILE"
 else
-  echo "$TIMESTAMP - ERROR: cwd not valid for running cleanup" >> "$LOG_FILE"
+  echo "$TIMESTAMP - ERROR: manage.py not found in cwd ($CWD)" >> "$LOG_FILE"
 fi
